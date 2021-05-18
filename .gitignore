@@ -1,0 +1,7 @@
+*.pyc 
+*.0 
+*.yaml
+.ipynb_checkpoints/
+*.ckpt'
+*.1 
+*.2 
