@@ -5,31 +5,47 @@ import torch.nn.functional as F
 
 import pytorch_lightning as pl 
 from torch_geometric.data import DataLoader 
-from get_geometric_data import get_geometric_data
+from avm_etl_module import get_geometric_data
 
 class AVMProjModule(pl.LightningModule):
-    def __init__(self, hidden_dim = 5, output_dim=1, lr = 0.001, batch_size = 1):
+    def __init__(self, num_node_features = 2, output_dim=1, hidden_dim = 5, batch_size = 1, lr = 0.001):
         super(AVMProjModule, self).__init__()
-        self.geometric_data = get_geometric_data()
-        num_node_features = self.geometric_data.num_node_features
         self.model = GraphNeuralNet(num_node_features, hidden_dim = hidden_dim, output_dim = output_dim)
-        self.lr = lr 
         self.batch_size = batch_size
+        self.lr = lr 
+        
     def forward(self, x, edge_index):
         y = self.model(x, edge_index)
         return y 
+    
     def training_step(self, batch, batch_idx):
         x, y, edge_index = batch.x, batch.y, batch.edge_index 
         y_hat = self(x, edge_index)
         loss = F.l1_loss(y_hat, y)
-        return {'loss': loss}
-    def training_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        # print(self.current_epoch, " - loss:", avg_loss.item() / self.batch_size)
-    def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=5e-4) 
+        self.log('avm/train_loss',loss)
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        x, y, edge_index = batch.x, batch.y, batch.edge_index 
+        y_hat = self(x, edge_index)
+        loss = F.l1_loss(y_hat, y)
+        return {'val_loss': loss}
+    
+    def validation_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        self.log('avm/val_loss', avg_loss)
+        
+    def prepare_data(self):
+        self.geometric_data = get_geometric_data()
+    
     def train_dataloader(self):
         return DataLoader([self.geometric_data], batch_size=self.batch_size)
+    
+    def val_dataloader(self):
+        return DataLoader([self.geometric_data], batch_size=self.batch_size)
+    
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=5e-4) 
 
 
 class GraphNeuralNet(torch.nn.Module):

@@ -2,9 +2,9 @@ from avm_modules import AVMProjModule
 import pytorch_lightning as pl 
 
 
-# project_module = AVMProjModule(hidden_dim=5)
+project_module = AVMProjModule(hidden_dim=5)
 
-project_module = AVMProjModule.load_from_checkpoint('lightning_logs/version_34/checkpoints/epoch=12964-step=12964.ckpt')
+# project_module = AVMProjModule.load_from_checkpoint('lightning_logs/version_34/checkpoints/epoch=12964-step=12964.ckpt')
 
 trainer = pl.Trainer(
     # auto_scale_batch_size='power', 

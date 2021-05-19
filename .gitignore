@@ -5,3 +5,4 @@
 *.ckpt'
 *.1 
 *.2 
+lightning_logs/
