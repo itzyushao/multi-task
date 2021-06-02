@@ -2,7 +2,7 @@
 *.0 
 *.yaml
 .ipynb_checkpoints/
-*.ckpt'
+*.ckpt
 *.1 
 *.2 
 lightning_logs/
